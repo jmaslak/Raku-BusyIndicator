@@ -6,6 +6,7 @@
   "build-depends": [
   ],
   "depends": [
+    "LibUSB"
   ],
   "description": "Luxafor Indicators based on Google Calendar and Webcam Status",
   "license": "Artistic-2.0",
