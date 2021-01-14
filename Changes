@@ -1,6 +1,8 @@
 Revision history for Raku-BusyIndicator
 
 {{$NEXT}}
+
+0.0.4  2021-01-14T09:58:42-07:00
     - Ensure dependency is present
 
 0.0.3  2021-01-14T08:15:15-07:00
