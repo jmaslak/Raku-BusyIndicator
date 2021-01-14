@@ -7,9 +7,9 @@
   ],
   "depends": [
   ],
-  "description": "OO binding to libusb",
+  "description": "Luxafor Indicators based on Google Calendar and Webcam Status",
   "license": "Artistic-2.0",
-  "name": "BusyIndicator::LibUSB",
+  "name": "BusyIndicator",
   "perl": "6.d",
   "provides": {
     "BusyIndicator::LibUSB": "lib/BusyIndicator/LibUSB.rakumod",
