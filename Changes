@@ -1,6 +1,7 @@
 Revision history for Raku-BusyIndicator
 
 {{$NEXT}}
+    - Fix invalid class name
 
 0.0.2  2021-01-13T21:43:57-07:00
     - Fix distro name
