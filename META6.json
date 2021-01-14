@@ -1,0 +1,26 @@
+{
+  "auth": "cpan:JMASLAK",
+  "authors": [
+    "Joelle Maslak"
+  ],
+  "build-depends": [
+  ],
+  "depends": [
+  ],
+  "description": "OO binding to libusb",
+  "license": "Artistic-2.0",
+  "name": "BusyIndicator::LibUSB",
+  "perl": "6.d",
+  "provides": {
+    "BusyIndicator::LibUSB": "lib/BusyIndicator/LibUSB.rakumod",
+    "BusyIndicator::Luxafor": "lib/BusyIndicator/Luxafor.rakumod"
+  },
+  "resources": [
+  ],
+  "source-url": "https://github.com/jmaslak/Raku-BusyIndicator.git",
+  "tags": [
+  ],
+  "test-depends": [
+  ],
+  "version": "0.0.1"
+}
