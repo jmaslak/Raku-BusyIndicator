@@ -1,6 +1,7 @@
 Revision history for Raku-BusyIndicator
 
 {{$NEXT}}
+    - Fix distro name
 
 0.0.1  2021-01-13T21:12:13-07:00
     - Initial version
