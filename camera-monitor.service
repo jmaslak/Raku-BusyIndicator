@@ -1,0 +1,13 @@
+[Unit]
+Description=Camera Monitor
+After=network.target home.mount
+StartLimitIntervalSec=0
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+User=root
+ExecStart=/home/jmaslak/git/antelope/Raku-BusyIndicator/start-camera.sh
+
+[Install]
+WantedBy=multi-user.target

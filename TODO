@@ -1,0 +1,8 @@
+Todo Items:
+
+  * Break out code into a module
+  * TESTS!
+  * Calendar interface depends on gcalcli (external application)
+  * Luxafor interface depends on a Python script (external application)
+  * Does not handle dalight savings time adjustment automatically (you
+    have to exit and restart the program for the change to be picked up)

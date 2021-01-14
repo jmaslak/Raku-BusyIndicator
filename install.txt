@@ -1,0 +1,9 @@
+You need libusb installed with headers.  On Ubuntu:
+    sudo apt-get install libusb-1.0-0-dev
+
+You need relatively recent Raku to be installed. Download Raku from
+    https://www.raku.org/
+
+Once installed, as root, you can install this package with:
+    zef install BusyIndicator
+
