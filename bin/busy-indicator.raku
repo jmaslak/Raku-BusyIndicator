@@ -55,7 +55,7 @@ class Appointment {
     }
 }
 
-sub MAIN(Str :$calendar, Int:D :$interval = 60, Int:D :$port = 3333) {
+sub MAIN(Str :$calendar, Int:D :$interval = 60, Int:D :$port = 0) {
     my Channel:D $channel = Channel.new;
     my Str:D @calendar;
 
@@ -147,7 +147,7 @@ sub start-background(Str:D @calendar, Channel:D $channel, Int:D $interval, Int:D
     start {
         my @appointments = get-appointments-from-google(@calendar)<>;
         $channel.send(@appointments);
-        
+
         react {
             whenever Supply.interval($interval) {
                 @appointments = get-appointments-from-google(@calendar)<>;
@@ -157,23 +157,25 @@ sub start-background(Str:D @calendar, Channel:D $channel, Int:D $interval, Int:D
     }
 
     # Remote Network monitor
-    start {
-        my $camera = False;
-        my $socket = IO::Socket::Async.bind-udp('::', $port);
- 
-        react {
-            whenever $socket.Supply -> $v {
-                if $v ~~ m/ ^ "CAMERA " [ON || OFF] $/ {
-                    my $new-camera = False;
-                    if $v eq "CAMERA ON" {
-                        $new-camera = True;
+    if $port ≠ 0 {
+        start {
+            my $camera = False;
+            my $socket = IO::Socket::Async.bind-udp('::', $port);
+
+            react {
+                whenever $socket.Supply -> $v {
+                    if $v ~~ m/ ^ "CAMERA " [ON || OFF] $/ {
+                        my $new-camera = False;
+                        if $v eq "CAMERA ON" {
+                            $new-camera = True;
+                        }
+                        if $new-camera ≠ $camera {
+                            $camera = $new-camera;
+                            $channel.send: 'remote-camera ' ~ ( $camera ?? "on" !! "off" );
+                        }
+                    } elsif $v ~~ m/ ^ "KEY " (.) $/ {
+                        $channel.send($0.Str.fc);
                     }
-                    if $new-camera ≠ $camera {
-                        $camera = $new-camera;
-                        $channel.send: 'remote-camera ' ~ ( $camera ?? "on" !! "off" );
-                    }
-                } elsif $v ~~ m/ ^ "KEY " (.) $/ {
-                    $channel.send($0.Str.fc);
                 }
             }
         }
@@ -227,7 +229,7 @@ sub display(
     }
 
     my @current = @appointments.grep(*.in-meeting).grep(! *.is-long-meeting);
-    
+
     if $off {
         @ignores    = @current;
         $manual     = False;
@@ -237,7 +239,7 @@ sub display(
     if @current.elems == 0 and @ignores.elems {
         @ignores = ();
     }
-    
+
     @current = @current.grep(*.Str ∉  @ignores».Str);
 
     if $red {
@@ -383,9 +385,4 @@ sub time-say(Str:D $color is copy, +@args --> Nil) {
 }
 
 sub time-note(+@args --> Nil) { time-say "white", |@args }
-
-
-# Note that LibUSB is:
-# Copyright 2020 Travis Gibson                                                    
-# This library is free software; you can redistribute it and/or modify it under the Artistic License 2.0.
 
