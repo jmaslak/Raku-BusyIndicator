@@ -1,9 +1,31 @@
 You need libusb installed with headers.  On Ubuntu:
     sudo apt-get install libusb-1.0-0-dev
 
-You need relatively recent Raku to be installed. Download Raku from
+You need to make sure the USB HID driver in Linux doesn't bind to
+the Luxafor.  To do that, on Ubuntu, create a file named
+/etc/modprobe.d/luxafor.conf with contents of:
+    options usbhid quirks=0x04d8:0xf372:0x0004
+
+You also need to ensure that the udev subsystem allows you to access the
+Luxafor without root access.  To do that on Ubuntu, create a file as
+/etc/udev/rules.d/luxafor.rules with the following content, changing
+"jmaslak" to whatever your username is.
+    SUBSYSTEM=="usb", ATTR{idVendor}=="04d8", ATTR{idProduct}=="f372" MODE="0664", OWNER="jmaslak"
+
+For Google calendar integration (optional), you'll need gcalcli
+installed.  on Ubuntu:
+    sudo apt-get install gcalcli
+
+Then you'll want to run gcalcli the first time, and log into Google with
+your proper credentials:
+    gcalcli agenda
+
+You need relatively recent Raku to be installed. Download Raku for your OS
+from:
     https://www.raku.org/
 
-Once installed, as root, you can install this package with:
+Once Raku is installed, as root, you can install this package with:
     zef install BusyIndicator
 
+Now you can run the script using "busy-indicator-raku" from the command
+line!
