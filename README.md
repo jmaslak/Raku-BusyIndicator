@@ -59,6 +59,8 @@ INSTALLATION PREREQUISITES
 
 You must have a Luxafor flag to use this program.
 
+You need relatively recent Raku to be installed. Download Raku for your OS from: https://www.raku.org/
+
 You must install `LibUSB` development libraries. On Ubuntu, this is done with:
 
     sudo apt-get install libusb-1.0-0-dev
@@ -66,6 +68,8 @@ You must install `LibUSB` development libraries. On Ubuntu, this is done with:
 You must also install `gcalcli` if using the Google Calendar integration. To do that on Ubuntu:
 
     sudo apt-get install gcalcli
+
+Then you'll want to run gcalcli the first time, and log into Google with your proper credentials (the first time you run gcalcli, it'll open a browser for you to log into your Google account): gcalcli agenda
 
 You must ensure that the Luxafor Flag is not bound to the `usbhid` module. To do that on Ubuntu, create a file `/etc/modprobe.d/luxafor.conf` that contains:
 
@@ -78,6 +82,10 @@ If you wish to run this program as a standard user (highly recommended), you als
     SUBSYTEM=="usb", ATTR{idVendor}="04d8", ATTR{idProduct}=="f372" MODE="0664" OWNER="jmaslak"
 
 Replace `jmaslak` in the above file with your username. Then you will need to reboot for this change to take effect.
+
+As root (or another user depending on your Raku installation), you can install this package with: zef install BusyIndicator
+
+Now you can run the script using "busy-indicator-raku" from the command line!
 
 COPYRIGHT
 =========

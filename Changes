@@ -1,6 +1,8 @@
 Revision history for Raku-BusyIndicator
 
 {{$NEXT}}
+
+0.0.5  2021-01-16T16:43:13-07:00
     - Documentation improvement
 
 0.0.4  2021-01-14T09:58:42-07:00
