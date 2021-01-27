@@ -186,7 +186,7 @@ sub start-background(Str:D @calendar, Channel:D $channel, UInt:D $interval, UInt
 }
 
 sub start-network-background(Channel:D $channel, UInt:D $port --> Nil) {
-    start start-network-server: $channel, $port;
+    start start-network-server($channel, $port);
 }
 
 sub start-network-server(Channel:D $channel, UInt:D $port --> Nil) {

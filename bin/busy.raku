@@ -15,7 +15,7 @@ sub MAIN(Str:D $char, Str :$udp-host is copy, Int :$udp-port is copy) {
     die("Must provide a UDP host to connect to") unless $config<udp-host>.defined;
 
     my $socket = IO::Socket::Async.udp();
-    await $socket.print-to($config<udp-host>, $config<udp-port>, "KEY {$char}");
+    await $socket.print-to($udp-host, $udp-port, "KEY {$char}");
 }
 
 sub read_config(-->Hash:D) {

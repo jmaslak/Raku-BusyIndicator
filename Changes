@@ -1,6 +1,8 @@
 Revision history for Raku-BusyIndicator
 
 {{$NEXT}}
+    - [bugfix] busy.raku was not allowing command line arguments to
+      override config file
     - Refactoring
 
 0.0.5  2021-01-16T16:43:13-07:00
