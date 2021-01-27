@@ -55,7 +55,7 @@ class Appointment {
     }
 }
 
-sub MAIN(Str :$calendar, Int:D :$interval = 60, Int:D :$port = 0) {
+sub MAIN(Str :$calendar, UInt:D :$interval = 60, UInt:D :$port = 0) {
     my Channel:D $channel = Channel.new;
     my Str:D @calendar;
 
@@ -129,7 +129,7 @@ sub MAIN(Str :$calendar, Int:D :$interval = 60, Int:D :$port = 0) {
     }
 }
 
-sub start-background(Str:D @calendar, Channel:D $channel, Int:D $interval, Int:D $port --> Nil) {
+sub start-background(Str:D @calendar, Channel:D $channel, UInt:D $interval, UInt:D $port --> Nil) {
     # Start ticks
     start {
         my $now = DateTime.now;
@@ -158,27 +158,7 @@ sub start-background(Str:D @calendar, Channel:D $channel, Int:D $interval, Int:D
 
     # Remote Network monitor
     if $port ≠ 0 {
-        start {
-            my $camera = False;
-            my $socket = IO::Socket::Async.bind-udp('::', $port);
-
-            react {
-                whenever $socket.Supply -> $v {
-                    if $v ~~ m/ ^ "CAMERA " [ON || OFF] $/ {
-                        my $new-camera = False;
-                        if $v eq "CAMERA ON" {
-                            $new-camera = True;
-                        }
-                        if $new-camera ≠ $camera {
-                            $camera = $new-camera;
-                            $channel.send: 'remote-camera ' ~ ( $camera ?? "on" !! "off" );
-                        }
-                    } elsif $v ~~ m/ ^ "KEY " (.) $/ {
-                        $channel.send($0.Str.fc);
-                    }
-                }
-            }
-        }
+        start-network-background($channel, $port)
     }
 
     # Camera monitor
@@ -204,6 +184,33 @@ sub start-background(Str:D @calendar, Channel:D $channel, Int:D $interval, Int:D
         }
     }
 }
+
+sub start-network-background(Channel:D $channel, UInt:D $port --> Nil) {
+    start start-network-server: $channel, $port;
+}
+
+sub start-network-server(Channel:D $channel, UInt:D $port --> Nil) {
+    my $camera = False;
+    my $socket = IO::Socket::Async.bind-udp('::', $port);
+
+    react {
+        whenever $socket.Supply -> $v {
+            if $v ~~ m/ ^ "CAMERA " [ON || OFF] $/ {
+                my $new-camera = False;
+                if $v eq "CAMERA ON" {
+                    $new-camera = True;
+                }
+                if $new-camera ≠ $camera {
+                    $camera = $new-camera;
+                    $channel.send: 'remote-camera ' ~ ( $camera ?? "on" !! "off" );
+                }
+            } elsif $v ~~ m/ ^ "KEY " (.) $/ {
+                $channel.send($0.Str.fc);
+            }
+        }
+    }
+}
+
 
 sub display(
     BusyIndicator::Luxafor $luxafor,
