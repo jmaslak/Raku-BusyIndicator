@@ -1,6 +1,8 @@
 Revision history for Raku-BusyIndicator
 
 {{$NEXT}}
+
+0.0.7  2021-01-29T11:30:21-07:00
     - [feature] Truncate long lines on output
 
 0.0.6  2021-01-27T10:53:08-07:00
