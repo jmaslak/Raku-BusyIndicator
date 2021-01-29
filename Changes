@@ -1,6 +1,7 @@
 Revision history for Raku-BusyIndicator
 
 {{$NEXT}}
+    - [feature] Truncate long lines on output
 
 0.0.6  2021-01-27T10:53:08-07:00
     - [bugfix] busy.raku was not allowing command line arguments to

@@ -381,15 +381,46 @@ sub light-command($luxafor, $r, $g, $b) {
 }
 
 sub time-say(Str:D $color is copy, +@args --> Nil) {
+    my $width = get-width();
+
     if $color eq 'red' {
         $color = 'inverse red';
     }
     my $now = DateTime.now;
     print color($color);
-    say "{$now.yyyy-mm-dd} {$now.hh-mm-ss} ", |@args;
+
+    my $out = "{$now.yyyy-mm-dd} {$now.hh-mm-ss} " ~ @args.join("");
+    if $width { $out = $out.substr(0, $width) }
+
+    say $out;
+
     print color($color);
     print INVERSE_OFF();
 }
 
 sub time-note(+@args --> Nil) { time-say "white", |@args }
 
+sub get-width(-->UInt:D) {
+    # Returns the screen width (or zero if not able to determine)
+    CATCH {
+        return 0;
+    }
+
+    return get-terminal-width;
+}
+
+sub get-terminal-width(--> Int:D) {
+    state $width = 0;
+    state $tm    = 0;
+
+    my $now = DateTime.now.posix.Int;
+    return $width if $now == $tm;  # Use cache
+
+    $tm = $now;
+
+    my $stty = run("stty", "-a", :out, :err);
+    my $out = $stty.out.slurp;
+
+    return 0 unless $out.match(/ 'columns ' <( \d+ )> /);
+    return $out.match(/ 'columns ' <( \d+ )> /).Int;
+}
