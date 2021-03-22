@@ -5,7 +5,7 @@ use v6.d;
 # All Rights Reserved - See License
 #
 
-unit class BusyIndicator::Luxafor:ver<0.0.7>:auth<cpan:JMASLAK>;
+unit class BusyIndicator::Luxafor:ver<0.1.0>:auth<cpan:JMASLAK>;
 
 use LibUSB;
 use LibUSB::Raw;
