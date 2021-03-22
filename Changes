@@ -1,6 +1,8 @@
 Revision history for Raku-BusyIndicator
 
 {{$NEXT}}
+    - [feature] Ignore the first [remote-]camera on event, only process
+      the subequent ones.
 
 0.0.7  2021-01-29T11:30:21-07:00
     - [feature] Truncate long lines on output

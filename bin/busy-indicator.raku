@@ -164,12 +164,25 @@ sub start-background(Str:D @calendar, Channel:D $channel, UInt:D $interval, UInt
     # Camera monitor
     start {
         my $camera = False;
+        # We make sure that we get TWO camera inputs before we say the camera is on.
+        my $camera-on-count = 0;
+
         react {
             whenever Supply.interval(1) {
                 my $new-camera = get-camera();
+                if $new-camera {
+                    $camera-on-count++;
+                } else {
+                    $camera-on-count = 0;
+                }
+
                 if $new-camera ≠ $camera {
-                    $camera = $new-camera;
-                    $channel.send: 'camera ' ~ ( $camera ?? "on" !! "off" );
+                    if $new-camera and $camera-on-count ≤ 1 {
+                        # Do nothing, we want one more camea on event.
+                    } else {
+                        $camera = $new-camera;
+                        $channel.send: 'camera ' ~ ( $camera ?? "on" !! "off" );
+                    }
                 }
             }
         }
@@ -193,16 +206,26 @@ sub start-network-server(Channel:D $channel, UInt:D $port --> Nil) {
     my $camera = False;
     my $socket = IO::Socket::Async.bind-udp('::', $port);
 
+    # We make sure that we get TWO camera inputs before we say the camera is on.
+    my $camera-on-count = 0;
+
     react {
         whenever $socket.Supply -> $v {
             if $v ~~ m/ ^ "CAMERA " [ON || OFF] $/ {
-                my $new-camera = False;
+                my Bool:D $new-camera = False;
                 if $v eq "CAMERA ON" {
+                    $camera-on-count++;
                     $new-camera = True;
+                } else {
+                    $camera-on-count = 0;
                 }
                 if $new-camera ≠ $camera {
-                    $camera = $new-camera;
-                    $channel.send: 'remote-camera ' ~ ( $camera ?? "on" !! "off" );
+                    if $new-camera and $camera-on-count ≤ 1 {
+                        # We don't turn on the camera here.
+                    } else {
+                        $camera = $new-camera;
+                        $channel.send: 'remote-camera ' ~ ( $camera ?? "on" !! "off" );
+                    }
                 }
             } elsif $v ~~ m/ ^ "KEY " (.) $/ {
                 $channel.send($0.Str.fc);
