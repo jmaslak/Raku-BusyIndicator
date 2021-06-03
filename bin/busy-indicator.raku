@@ -121,6 +121,11 @@ sub MAIN(Str :$calendar, UInt:D :$interval = 60, UInt:D :$port = 0) {
                 display-future-meetings(@appointments);
             } elsif $key eq '.' {
                 display($luxafor, @appointments, $camera, $remote-camera);
+            } elsif $key eq 'offset error' {
+                time-note "Cannot monitor time zone offset changes";
+            } elsif $key ~~ m/^ 'offset ' '-'? <[0..9]>+ $/ {
+                my $offset = +($key.split(" ")[1]);
+                adjust-offset($offset);
             } else {
                 time-note "Unknown key press";
                 display($luxafor, @appointments, $camera, $remote-camera);
@@ -196,6 +201,29 @@ sub start-background(Str:D @calendar, Channel:D $channel, UInt:D $interval, UInt
             }
         }
     }
+
+    # Time Zone Monitor
+    start {
+        CATCH {
+            default {
+                $channel.send: "offset error";
+            }
+        }
+        react {
+            whenever Supply.interval(60) {
+                my $proc = run <date +%z>, :out;
+                my $out = $proc.out.slurp(:close);
+                my $i = +$out;
+                my $sign = $i ÷ abs($i);
+
+                # Format of "$i" is "<sign>HHMM" so we want to convert
+                # to seconds.
+                my $offset = $sign × (abs($i) ÷ 100).Int × 3600 + (abs($i) % 100) × 60;
+
+                $channel.send: "offset {$offset}";
+            }
+        }
+    }
 }
 
 sub start-network-background(Channel:D $channel, UInt:D $port --> Nil) {
@@ -234,6 +262,12 @@ sub start-network-server(Channel:D $channel, UInt:D $port --> Nil) {
     }
 }
 
+sub adjust-offset(Int:D $offset) {
+    if $*TZ ≠ $offset {
+        $*TZ = $offset;
+        time-note "UTC offset change detected. New offset: $*TZ";
+    }
+}
 
 sub display(
     BusyIndicator::Luxafor $luxafor,

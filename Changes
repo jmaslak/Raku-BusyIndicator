@@ -1,6 +1,9 @@
 Revision history for Raku-BusyIndicator
 
 {{$NEXT}}
+    - [enhancement] Checks for time zone changes once a minute and
+      adjusts output if a time zone change is detected. This only works
+      on some platforms currently (should work on Linux).
 
 0.1.0  2021-03-21T20:35:02-06:00
     - [feature] Ignore the first [remote-]camera on event, only process
