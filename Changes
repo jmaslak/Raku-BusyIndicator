@@ -1,6 +1,8 @@
 Revision history for Raku-BusyIndicator
 
 {{$NEXT}}
+
+0.2.0  2021-06-03T18:02:05-06:00
     - [enhancement] Checks for time zone changes once a minute and
       adjusts output if a time zone change is detected. This only works
       on some platforms currently (should work on Linux).
