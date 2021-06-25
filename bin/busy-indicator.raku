@@ -414,29 +414,19 @@ sub background-network(Channel:D $channel, UInt:D $port --> Nil) {
     # Remote Network monitor
     return if $port == 0;
 
-    my $camera = False;
+    my $camera = 0;
     my $socket = IO::Socket::Async.bind-udp('::', $port);
-
-    # We make sure that we get TWO camera inputs before we say the camera is on.
-    my $camera-on-count = 0;
 
     react {
         whenever $socket.Supply -> $v {
-            if $v ~~ m/ ^ "CAMERA " [ON || OFF] $/ {
-                my Bool:D $new-camera = False;
-                if $v eq "CAMERA ON" {
-                    $camera-on-count++;
-                    $new-camera = True;
-                } else {
-                    $camera-on-count = 0;
+            if $v eq "CAMERA ON" {
+                # We need TWO camera "on" events before we change state
+                if $camera++ == 2 {
+                    $channel.send: Message-Remote.new(state => True);
                 }
-                if $new-camera ≠ $camera {
-                    if $new-camera and $camera-on-count ≤ 1 {
-                        # We don't turn on the camera here.
-                    } else {
-                        $camera = $new-camera;
-                        $channel.send: Message-Remote.new(state => $camera);
-                    }
+            } elsif $v eq "CAMERA OFF" {
+                if $camera ≠ 0 {
+                    $channel.send: Message-Remote.new(state => False);
                 }
             } elsif $v ~~ m/ ^ "KEY " (.) $/ {
                 $channel.send: Message-Keypress.new(key => $0.Str.fc);
@@ -446,25 +436,18 @@ sub background-network(Channel:D $channel, UInt:D $port --> Nil) {
 }
 
 sub background-camera(Channel:D $channel -->Nil) {
-    my $camera = False;
-    # We make sure that we get TWO camera inputs before we say the camera is on.
-    my $camera-on-count = 0;
+    my $camera = 0;
 
     react {
         whenever Supply.interval(1) {
-            my $new-camera = get-camera();
-            if $new-camera {
-                $camera-on-count++;
+            # We need TWO camera "on" events before we change state
+            if get-camera() {
+                if $camera++ == 2 {
+                    $channel.send: Message-Camera.new( state => True );
+                }
             } else {
-                $camera-on-count = 0;
-            }
-
-            if $new-camera ≠ $camera {
-                if $new-camera and $camera-on-count ≤ 1 {
-                    # Do nothing, we want one more camea on event.
-                } else {
-                    $camera = $new-camera;
-                    $channel.send: Message-Camera.new( state => $camera );
+                if $camera ≠ 0 {
+                    $channel.send: Message-Camera.new( state => False );
                 }
             }
         }
