@@ -60,9 +60,7 @@ sub MAIN(Str :$calendar, UInt:D :$interval = 60, UInt:D :$port = 0) {
     my Str:D @calendar;
 
     @calendar = $calendar.split(",") if $calendar.defined;
-
     start-background(@calendar, $channel, $interval, $port);
-
     time-note "Fetching meetings from Google" if @calendar.elems;
 
     my $luxafor = BusyIndicator::Luxafor.new;
