@@ -79,13 +79,22 @@ class Appointment {
     method human-printable(-->Str) {
         return "%02d:%02d %s".sprintf($.start.hour, $.start.minute, $.description);
     }
+
+    method is-ooo(-->Bool) {
+        if $.description.fc eq "ooo".fc {
+            return True;
+        } else {
+            return False;
+        }
+    }
 }
 
 class Main-Thread {
-    has           @.calendar is required;
-    has Channel:D $.channel  is required;
-    has UInt:D    $.interval is required;
-    has UInt:D    $.port     is required;
+    has           @.calendar   is required;
+    has Channel:D $.channel    is required;
+    has UInt:D    $.interval   is required;
+    has UInt:D    $.port       is required;
+    has Bool:D    $.ignore-ooo is required;
 
     has           @!appointments;
     has Bool:D    $!camera         = False;
@@ -199,8 +208,6 @@ class Main-Thread {
         state $manual;
         state $last-green;
 
-        my $next = @!appointments.grep(*.future-meeting).first;
-
         # Add fake appointment if we're in a call.
         if $!camera or $!remote-camera {
             my $start = DateTime.new("1900-01-01T00:00:00Z");
@@ -208,7 +215,14 @@ class Main-Thread {
             @!appointments.push: Appointment.new( :$start, :$end, :description("In video call") );
         }
 
-        my @current = @!appointments.grep(*.in-meeting).grep(! *.is-long-meeting);
+        my @filtered = @!appointments;
+        if $!ignore-ooo {
+            @filtered = @filtered.grep(! *.is-ooo)<>;
+        }
+
+        my $next = @filtered.grep(*.future-meeting).first;
+
+        my @current = @filtered.grep(*.in-meeting).grep(! *.is-long-meeting);
 
         if $off {
             @ignores    = @current;
@@ -260,6 +274,9 @@ class Main-Thread {
 
     method display-future-meetings(--> Nil) {
         my @future = @!appointments.grep(*.future-meeting)<>;
+        if $!ignore-ooo {
+            @future = @future.grep(! *.is-ooo)<>;
+        }
         if @future.elems > 0 {
             self.time-note("Today's meetings:");
             for @future -> $meeting {
@@ -365,19 +382,26 @@ class Main-Thread {
 }
 
 
-sub MAIN(Str :$calendar, UInt:D :$interval = 60, UInt:D :$port = 0) {
+sub MAIN(Str :$calendar, UInt:D :$interval = 60, UInt:D :$port = 0, Bool:D :$ignore-ooo = False) {
     my Channel:D $channel = Channel.new;
 
     my Str:D @calendar;
     @calendar = $calendar.split(",") if $calendar.defined;
 
-    start-background(@calendar, $channel, $interval, $port);
+    start-background(@calendar, $channel, $interval, $port, $ignore-ooo);
 
-    my $main-thread = Main-Thread.new( :$channel, :@calendar, :$interval, :$port );
+    my $main-thread = Main-Thread.new( :$channel, :@calendar, :$interval, :$port, :$ignore-ooo );
     $main-thread.start();
 }
 
-sub start-background(Str:D @calendar, Channel:D $channel, UInt:D $interval, UInt:D $port --> Nil) {
+sub start-background(
+    Str:D @calendar,
+    Channel:D $channel,
+    UInt:D $interval,
+    UInt:D $port,
+    Bool:D $ignore-ooo
+    --> Nil
+) {
     start { background-ticks($channel, $interval)             }
     start { background-google($channel, $interval, @calendar) }
     start { background-network($channel, $port)               }
@@ -398,7 +422,12 @@ sub background-ticks(Channel:D $channel, UInt:D $interval --> Nil) {
     }
 }
 
-sub background-google(Channel:D $channel, UInt:D $interval, Str:D @calendar --> Nil) {
+sub background-google(
+    Channel:D $channel,
+    UInt:D $interval,
+    Str:D @calendar,
+    --> Nil
+) {
     my @appointments = get-appointments-from-google(@calendar)<>;
     $channel.send: Message-Appointments.new(:@appointments);
 
@@ -421,7 +450,7 @@ sub background-network(Channel:D $channel, UInt:D $port --> Nil) {
         whenever $socket.Supply -> $v {
             if $v eq "CAMERA ON" {
                 # We need TWO camera "on" events before we change state
-                if $camera++ == 2 {
+                if $camera++ == 1 {
                     $channel.send: Message-Remote.new(state => True);
                 }
             } elsif $v eq "CAMERA OFF" {

@@ -1,11 +1,11 @@
 use v6;
 
 #
-# Copyright © 2021 Joelle Maslak
+# Copyright © 2021-2023 Joelle Maslak
 # All Rights Reserved - See License
 #
 
-unit class BusyIndicator:ver<0.2.0>:auth<cpan:JMASLAK>;
+unit class BusyIndicator:ver<0.2.1>:auth<cpan:JMASLAK>;
 
 # Right now, there is no functionality here.
 
