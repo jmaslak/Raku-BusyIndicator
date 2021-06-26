@@ -426,6 +426,7 @@ sub background-network(Channel:D $channel, UInt:D $port --> Nil) {
                 }
             } elsif $v eq "CAMERA OFF" {
                 if $camera ≠ 0 {
+                    $camera = 0;
                     $channel.send: Message-Remote.new(state => False);
                 }
             } elsif $v ~~ m/ ^ "KEY " (.) $/ {
@@ -447,6 +448,7 @@ sub background-camera(Channel:D $channel -->Nil) {
                 }
             } else {
                 if $camera ≠ 0 {
+                    $camera = 0;
                     $channel.send: Message-Camera.new( state => False );
                 }
             }
