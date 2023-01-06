@@ -5,7 +5,7 @@ use v6;
 # All Rights Reserved - See License
 #
 
-unit class BusyIndicator:ver<0.2.1>:auth<cpan:JMASLAK>;
+unit class BusyIndicator:ver<0.2.1>:auth<zef:jmaslak>;
 
 # Right now, there is no functionality here.
 

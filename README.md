@@ -37,6 +37,11 @@ This determines how often the script fetches Google calendar entries and writes 
 
 This determines what control port is used for this script. By default, it is 0 (disabled). If you use a control port (this is an advanced usage), you must specify a port number. Note that no authentication is used for this port, so it must not be firewalled or otherwise protected from outside access.
 
+--ignore-ooo
+------------
+
+Ignores meetings on the calendar with a title of "OOO" (in any case). I use these as "out of office" meetings to block time, but have a meeting visible in another calendar that has details, so the OOO meetings provide no useful additional context.
+
 USER INTERFACE
 ==============
 
@@ -90,7 +95,7 @@ Now you can run the script using "busy-indicator-raku" from the command line!
 COPYRIGHT
 =========
 
-Copyright © 2019-2021 Joelle Maslak This application is free software; you can distribute it and/or modify it under the Artistic License 2.0
+Copyright © 2019-2023 Joelle Maslak This application is free software; you can distribute it and/or modify it under the Artistic License 2.0
 
 Also included is a modified version of Travis Gibson's `LibUSB` which has a copyright: Copyright © 2020 Travis Gibson It is also licensed under the Artistic License 2.0.
 
