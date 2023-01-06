@@ -3,6 +3,7 @@ Revision history for Raku-BusyIndicator
 {{$NEXT}}
     - [feature] Add "ignore-ooo" switch to ignore meetings with a title
       of "ooo"
+    - [feature] Migrate module to ecosystem
 
 0.2.1  2021-06-26T09:34:39-06:00
     - [refactor] Refactoring code to make it a bit more clear
