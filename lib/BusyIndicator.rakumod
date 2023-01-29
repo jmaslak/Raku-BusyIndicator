@@ -17,7 +17,7 @@ BusyIndicator - Luxafor Indicators based on Google Calendar and Webcam Status
 
 =head1 COPYRIGHT
 
-Copyright © 2019-2021 Joelle Maslak
+Copyright © 2019-2023 Joelle Maslak
 This application is free software; you can distribute it and/or modify it under the Artistic License 2.0
 
 Also included is a modified version of Travis Gibson's C<LibUSB> which has a

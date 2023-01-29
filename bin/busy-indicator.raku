@@ -2,7 +2,7 @@
 use v6;
 
 #
-# Copyright © 2019-2021 Joelle Maslak
+# Copyright © 2019-2023 Joelle Maslak
 # All Rights Reserved - See License
 #
 
@@ -502,7 +502,7 @@ sub background-timezone(Channel:D $channel -->Nil) {
             my $proc = run <date +%z>, :out;
             my $out = $proc.out.slurp(:close);
             my $i = +$out;
-            my $sign = $i ÷ abs($i);
+            my $sign = ($i+1) ÷ abs($i+1);
 
             # Format of "$i" is "<sign>HHMM" so we want to convert
             # to seconds.
@@ -531,8 +531,16 @@ sub get-appointments-from-google(Str:D @calendar) {
         $flags.setattr(:NOW);
     }
 
-    my $now      = DateTime.now;
-    my $offset   = S/^.* <?before <[ + \- ]> >// with ~$now;
+    my $now = DateTime.now;
+
+    my $offset;
+    if ~$now ~~ m/Z$/ {
+        # Special case for UTC
+        $offset = "+00:00";
+    } else {
+        $offset = S/^.* <?before <[ + \- ]> >// with ~$now;
+    }
+
     my $tomorrow = $now.later(:1day);
 
     my @output = gather {

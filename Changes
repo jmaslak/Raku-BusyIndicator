@@ -1,6 +1,7 @@
 Revision history for Raku-BusyIndicator
 
 {{$NEXT}}
+    - [bugfix] Support monitoring TZ changes when TZ offset is +0000
 
 0.3.0  2023-01-06T13:03:39-07:00
     - [feature] Add "ignore-ooo" switch to ignore meetings with a title
