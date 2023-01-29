@@ -381,7 +381,6 @@ class Main-Thread {
 
 }
 
-
 sub MAIN(Str :$calendar, UInt:D :$interval = 60, UInt:D :$port = 0, Bool:D :$ignore-ooo = False) {
     my Channel:D $channel = Channel.new;
 
@@ -525,6 +524,13 @@ sub get-camera(-->Bool:D) {
 }
 
 sub get-appointments-from-google(Str:D @calendar) {
+    LEAVE {
+        # enable echo, even upon exception
+        my $flags := Term::termios.new(:fd($*IN.native-descriptor)).getattr;
+        $flags.set_lflags('ECHO');
+        $flags.setattr(:NOW);
+    }
+
     my $now      = DateTime.now;
     my $offset   = S/^.* <?before <[ + \- ]> >// with ~$now;
     my $tomorrow = $now.later(:1day);
