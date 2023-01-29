@@ -128,15 +128,16 @@ class Main-Thread {
 
     method handle-keypress($message) {
         given $message.key {
-            when 'h'|'?' { self.display-help            }
-            when 'b'     { self.keypress-busy           }
-            when 'o'     { self.keypress-off            }
-            when 'g'     { self.keypress-green          }
-            when 'q'     { self.keypress-quit           }
-            when 'n'     { self.display-next-meeting    }
-            when 'a'     { self.display-future-meetings }
-            when '.'     { self.display                 }
-            default      { self.keypress-unknown        }
+            when 'h'|'?' { self.display-help                    }
+            when 'b'     { self.keypress-busy                   }
+            when 'o'     { self.keypress-off                    }
+            when 'g'     { self.keypress-green                  }
+            when 'q'     { self.keypress-quit                   }
+            when 'n'     { self.display-next-meeting            }
+            when 'c'     { self.display-next-or-current-meeting }
+            when 'a'     { self.display-future-meetings         }
+            when '.'     { self.display                         }
+            default      { self.keypress-unknown                }
         }
     }
 
@@ -284,6 +285,15 @@ class Main-Thread {
             }
         } else {
             self.time-note("Today's meetings: no meetings today");
+        }
+    }
+
+    method display-next-or-current-meeting(--> Nil) {
+        my $next = @!appointments.grep({ $^a.future-meeting or $^a.in-meeting(:fuzz(0))}).first;
+        if $next.defined {
+            self.time-note("Next meeting: " ~ $next.human-printable);
+        } else {
+            self.time-note("Next meeting: No more meetings today");
         }
     }
 
@@ -524,11 +534,14 @@ sub get-camera(-->Bool:D) {
 }
 
 sub get-appointments-from-google(Str:D @calendar) {
-    LEAVE {
-        # enable echo, even upon exception
-        my $flags := Term::termios.new(:fd($*IN.native-descriptor)).getattr;
-        $flags.set_lflags('ECHO');
-        $flags.setattr(:NOW);
+    CATCH {
+        # enable echo upon exception
+        default {
+            my $flags := Term::termios.new(:fd($*IN.native-descriptor)).getattr;
+            $flags.set_lflags('ECHO');
+            $flags.setattr(:NOW);
+            .rethrow;
+        }
     }
 
     my $now = DateTime.now;
