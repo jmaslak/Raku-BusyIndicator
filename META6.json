@@ -6,6 +6,8 @@
   "build-depends": [
   ],
   "depends": [
+    "Cro",
+    "Cro::WebSocket",
     "LibUSB"
   ],
   "description": "Luxafor Indicators based on Google Calendar and Webcam Status",

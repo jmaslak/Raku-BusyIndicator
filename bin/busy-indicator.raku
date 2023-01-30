@@ -7,6 +7,9 @@ use v6;
 #
 
 use BusyIndicator::Luxafor;
+use Cro::HTTP::Router;
+use Cro::HTTP::Router::WebSocket;
+use Cro::HTTP::Server;
 use Term::ReadKey;
 use Term::termios;
 use Terminal::ANSIColor;
@@ -14,6 +17,10 @@ use Terminal::ANSIColor;
 my @GCAL-CMD = <gcalcli --nocolor --calendar _CALENDAR_ agenda --military --tsv --nodeclined>;
 my $MODULES-FILE = "/proc/modules";
 my $CAMERA-MOD   = "uvcvideo";
+
+# Do not update the keys in this hash, as this is used across multiple
+# threads! Instead, simply replace it with a new hashref.
+my $STATUS = { type => "status", status => "off", minutes-to-next => Int }
 
 class Message-Keypress {
     has Str:D $.key is required;
@@ -90,17 +97,22 @@ class Appointment {
 }
 
 class Main-Thread {
-    has           @.calendar   is required;
-    has Channel:D $.channel    is required;
-    has UInt:D    $.interval   is required;
-    has UInt:D    $.port       is required;
-    has Bool:D    $.ignore-ooo is required;
+    has            @.calendar        is required;
+    has Channel:D  $.channel         is required;
+    has UInt:D     $.interval        is required;
+    has UInt:D     $.port            is required;
+    has Bool:D     $.ignore-ooo      is required;
+    has Supplier:D $.client-supplier is required;
 
-    has           @!appointments;
-    has Bool:D    $!camera         = False;
-    has Bool:D    $!remote-camera  = False;
-    has Bool:D    $!google-success = False;
-    has           $!luxafor        = BusyIndicator::Luxafor.new;
+    has            @!appointments;
+    has            @!ignores;
+    has Bool:D     $!camera         = False;
+    has Bool:D     $!remote-camera  = False;
+    has Bool:D     $!google-success = False;
+    has            $!luxafor        = BusyIndicator::Luxafor.new;
+    has Bool:D     $!manual         = False;   # Light is manually on
+    has Bool:D     $!last-green     = False;   # Light is manually green
+
 
     method start() {
         self.time-note("Fetching meetings from Google") if @!calendar.elems;
@@ -205,10 +217,6 @@ class Main-Thread {
     }
 
     method display(:$off, :$red, :$green --> Nil) {
-        state @ignores;
-        state $manual;
-        state $last-green;
-
         # Add fake appointment if we're in a call.
         if $!camera or $!remote-camera {
             my $start = DateTime.new("1900-01-01T00:00:00Z");
@@ -226,27 +234,27 @@ class Main-Thread {
         my @current = @filtered.grep(*.in-meeting).grep(! *.is-long-meeting);
 
         if $off {
-            @ignores    = @current;
-            $manual     = False;
-            $last-green = False;
+            @!ignores   = @current;
+            $!manual     = False;
+            $!last-green = False;
         }
 
-        if @current.elems == 0 and @ignores.elems { @ignores = () }
+        if @current.elems == 0 and @!ignores.elems { @!ignores = () }
 
-        @current = @current.grep(*.Str ∉  @ignores».Str);
+        @current = @current.grep(*.Str ∉  @!ignores».Str);
 
         if $red {
-            $manual     = True;
-            $last-green = False;
+            $!manual     = True;
+            $!last-green = False;
         } elsif $green {
-            $manual     = False;
-            $last-green = True;
+            $!manual     = False;
+            $!last-green = True;
         }
 
-        if $manual {
+        if $!manual {
             self.time-say('red', "Busy indicator turned on manually");
             self.light-red;
-        } elsif $last-green {
+        } elsif $!last-green {
             self.time-say('green', "Indicator turned green manually");
             self.light-green;
         } elsif @current.elems {
@@ -256,7 +264,7 @@ class Main-Thread {
             self.time-say('red', "In meeting: {$now-meeting.description}");
             self.light-red;
         } else {
-            if @ignores.elems {
+            if @!ignores.elems {
                 self.time-note("Not in a meeting (manual override)");
             } else {
                 if $next.defined {
@@ -268,6 +276,9 @@ class Main-Thread {
             self.light-off;
         }
 
+        $STATUS = self.build_status_message;
+        $!client-supplier.emit($STATUS);
+
         CATCH: {
             return; # Just vaccum up the errors
         }
@@ -278,6 +289,7 @@ class Main-Thread {
         if $!ignore-ooo {
             @future = @future.grep(! *.is-ooo)<>;
         }
+
         if @future.elems > 0 {
             self.time-note("Today's meetings:");
             for @future -> $meeting {
@@ -288,8 +300,25 @@ class Main-Thread {
         }
     }
 
+    method minutes-to-current-or-next-meeting(--> Int) {
+        my @mtgs = @!appointments.grep({ $^a.future-meeting or $^a.in-meeting(:fuzz(0))});
+        @mtgs = @mtgs.grep(*.Str ∉  @!ignores».Str);
+        my $next = @mtgs.first;
+
+        if $next.defined {
+            my $tm = $next.start - DateTime.now;
+            return 0 unless $tm > 0;
+            return Int($tm ÷ 60);
+        } else {
+            return Int;
+        }
+    }
+
     method display-next-or-current-meeting(--> Nil) {
-        my $next = @!appointments.grep({ $^a.future-meeting or $^a.in-meeting(:fuzz(0))}).first;
+        my @mtgs = @!appointments.grep({ $^a.future-meeting or $^a.in-meeting(:fuzz(0))});
+        @mtgs = @mtgs.grep(*.Str ∉  @!ignores».Str);
+        my $next = @mtgs.first;
+
         if $next.defined {
             self.time-note("Next meeting: " ~ $next.human-printable);
         } else {
@@ -389,17 +418,54 @@ class Main-Thread {
         return $out.match(/ 'columns ' <( \d+ )> /).Int;
     }
 
+    method build_status_message(-->Hash) {
+        # Add fake appointment if we're in a call.
+        my @filtered = @!appointments;
+        if $!ignore-ooo {
+            @filtered = @filtered.grep(! *.is-ooo)<>;
+        }
+
+        my @current = @filtered.grep(*.in-meeting).grep(! *.is-long-meeting);
+        @current = @current.grep(*.Str ∉  @!ignores».Str);
+
+        my $color;
+        if $!manual {
+            $color = "red";
+        } elsif $!last-green {
+            $color = "green";
+        } elsif @current.elems {
+            $color = "red";
+        } else {
+            $color = "off";
+        }
+
+        my $next = self.minutes-to-current-or-next-meeting;
+
+        return {
+            type => "status",
+            status => $color,
+            minutes-to-next => $next,
+        }
+    }
+
 }
 
-sub MAIN(Str :$calendar, UInt:D :$interval = 60, UInt:D :$port = 0, Bool:D :$ignore-ooo = False) {
+sub MAIN(
+    Str :$calendar,
+    UInt:D :$interval = 60,
+    UInt:D :$port = 0,
+    Bool:D :$ignore-ooo = False,
+    UInt:D :$ws-port = 0,
+) {
     my Channel:D $channel = Channel.new;
+    my Supplier:D $client-supplier = Supplier.new;
 
     my Str:D @calendar;
     @calendar = $calendar.split(",") if $calendar.defined;
 
-    start-background(@calendar, $channel, $interval, $port, $ignore-ooo);
+    start-background(@calendar, $channel, $interval, $port, $ignore-ooo, $ws-port, $client-supplier);
 
-    my $main-thread = Main-Thread.new( :$channel, :@calendar, :$interval, :$port, :$ignore-ooo );
+    my $main-thread = Main-Thread.new( :$channel, :@calendar, :$interval, :$port, :$ignore-ooo, :$client-supplier );
     $main-thread.start();
 }
 
@@ -408,27 +474,40 @@ sub start-background(
     Channel:D $channel,
     UInt:D $interval,
     UInt:D $port,
-    Bool:D $ignore-ooo
+    Bool:D $ignore-ooo,
+    UInt:D $ws-port,
+    Supplier:D $client-supplier,
     --> Nil
 ) {
-    start { background-ticks($channel, $interval)             }
-    start { background-google($channel, $interval, @calendar) }
-    start { background-network($channel, $port)               }
-    start { background-camera($channel)                       }
-    start { background-keypress($channel)                     }
-    start { background-timezone($channel)                     }
+    start { background-ticks($channel, $interval)                      }
+    start { background-google($channel, $interval, @calendar)          }
+    start { background-network($channel, $port)                        }
+    start { background-webserver($channel, $ws-port, $client-supplier) }
+    start { background-camera($channel)                                }
+    start { background-keypress($channel)                              }
+    start { background-timezone($channel)                              }
 }
 
 sub background-ticks(Channel:D $channel, UInt:D $interval --> Nil) {
     my $now = DateTime.now;
-    if $now.second {
-        # Start at 00:00
-        sleep 60 - $now.second if $now.second; # Start at 00:00
-    }
+    state $due = next-interval($interval);
 
     react {
-        whenever Supply.interval($interval) { $channel.send(Message-Tick.new) }
+        whenever Supply.interval(1) {
+            my $now = DateTime.now;
+            if $now >= $due {
+                $channel.send(Message-Tick.new);
+                $due = next-interval($interval);
+            }
+        }
     }
+}
+
+sub next-interval(UInt:D $interval --> DateTime:D) {
+    my $now = DateTime.now.truncated-to('second', :timezone(0));
+    
+    my Numeric:D $new-posix = $now.posix - ($now.posix % $interval) + $interval;
+    return DateTime.new($new-posix);
 }
 
 sub background-google(
@@ -472,6 +551,38 @@ sub background-network(Channel:D $channel, UInt:D $port --> Nil) {
             }
         }
     }
+}
+
+sub background-webserver(Channel:D $channel, UInt:D $ws-port, Supplier:D $client-supplier --> Nil) {
+    # Remote Web Socket Connections
+    return if $ws-port == 0;
+
+    my $application = route {
+        get -> '' {
+            content 'text/plain', "Hello - This is the Busy Indicator service!\n";
+        }
+
+        get -> 'feed' {
+            web-socket :json, -> $incoming {
+                supply {
+                    emit $STATUS;
+                    whenever $incoming -> $message {
+                        emit $message;
+                    }
+                    whenever $client-supplier -> $message {
+                        emit $message;
+                    }
+                }
+            }
+        }
+    }
+
+    my Cro::Service $svc = Cro::HTTP::Server.new(
+        :host<localhost>,
+        :port($ws-port),
+        :$application,
+    );
+    $svc.start;
 }
 
 sub background-camera(Channel:D $channel -->Nil) {
@@ -574,4 +685,3 @@ sub get-appointments-from-google(Str:D @calendar) {
 
     return @output.sort.unique;
 }
-
