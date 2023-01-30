@@ -1,6 +1,8 @@
 Revision history for Raku-BusyIndicator
 
 {{$NEXT}}
+
+0.4.0  2023-01-30T03:02:08Z
     - [bugfix] Support monitoring TZ changes when TZ offset is +0000
     - [feature] Start of implementation of a web server to communicate
       status to extrernal programs. This is disabled by default, but

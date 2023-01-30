@@ -5,7 +5,7 @@ use v6.d;
 # All Rights Reserved - See License
 #
 
-unit class BusyIndicator::Luxafor:ver<0.3.0>:auth<zef:jmaslak>;
+unit class BusyIndicator::Luxafor:ver<0.4.0>:auth<zef:jmaslak>;
 
 use LibUSB;
 use LibUSB::Raw;
