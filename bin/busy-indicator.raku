@@ -103,6 +103,7 @@ class Main-Thread {
     has UInt:D     $.port            is required;
     has Bool:D     $.ignore-ooo      is required;
     has Supplier:D $.client-supplier is required;
+    has Str        $.externalrgb;
 
     has            @!appointments;
     has            @!ignores;
@@ -346,11 +347,11 @@ class Main-Thread {
         self.time-note("  . = refresh");
     }
 
-    method light-red()   { self.light-command(20,  0, 0) }
-    method light-green() { self.light-command( 0, 20, 0) }
-    method light-off()   { self.light-command( 0,  0, 0) }
+    method light-red()   { self.light-command(20,  0, 0, 255, 0, 0) }
+    method light-green() { self.light-command( 0, 20, 0, 0, 255, 0) }
+    method light-off()   { self.light-command( 0,  0, 0, 50, 0, 50) }
 
-    method light-command($r, $g, $b) {
+    method light-command($r, $g, $b, $extr, $extg, $extb) {
         state $last = '';
         state $sent-times = 0;
 
@@ -368,6 +369,7 @@ class Main-Thread {
                 }
             }
             $!luxafor.indicate($r, $g, $b);
+            run $!externalrgb, $extr, $extg, $extb if $!externalrgb.defined;
         }
 
         return;
@@ -456,6 +458,7 @@ sub MAIN(
     UInt:D :$port = 0,
     Bool:D :$ignore-ooo = False,
     UInt:D :$ws-port = 0,
+    Str :$externalrgb,
 ) {
     my Channel:D $channel = Channel.new;
     my Supplier:D $client-supplier = Supplier.new;
@@ -465,7 +468,7 @@ sub MAIN(
 
     start-background(@calendar, $channel, $interval, $port, $ignore-ooo, $ws-port, $client-supplier);
 
-    my $main-thread = Main-Thread.new( :$channel, :@calendar, :$interval, :$port, :$ignore-ooo, :$client-supplier );
+    my $main-thread = Main-Thread.new( :$channel, :@calendar, :$interval, :$port, :$ignore-ooo, :$client-supplier, :$externalrgb );
     $main-thread.start();
 }
 
