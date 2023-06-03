@@ -1,6 +1,8 @@
 Revision history for Raku-BusyIndicator
 
 {{$NEXT}}
+    - [feature] Add "externalrgb" option to allow non-Luxafor flags
+      to be used.
 
 0.4.1  2023-01-31T03:19:13Z
     - [bugfix] Include missing dependency in META6.json
