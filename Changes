@@ -1,6 +1,8 @@
 Revision history for Raku-BusyIndicator
 
 {{$NEXT}}
+
+0.5.0  2023-06-02T20:08:14-06:00
     - [feature] Add "externalrgb" option to allow non-Luxafor flags
       to be used.
 

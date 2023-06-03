@@ -27,6 +27,11 @@ To access these calendars, this program uses the `gcalcli` program. Thus, you ne
 
 If you don't want to use Google calendar integration, simply don't provide this option.
 
+--externalrgb=command
+---------------------
+
+A script to execute (you should provide the full path) when an RGB color change occurs (I.E. going from "free" to "busy" or similar. This allows use of indicators other than (or in addition to) Luxafor flags. This script must take three parameters--the red, green, and blue color values. Each value will be an integer between zero and 255. The full path to the script should be specified.
+
 --interval=<seconds>
 --------------------
 
