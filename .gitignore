@@ -2,3 +2,4 @@
 /BusyIndicator-*
 /*.log
 *.sh
+bin/sync.raku
