@@ -2,7 +2,7 @@
 use v6;
 
 #
-# Copyright © 2019-2023 Joelle Maslak
+# Copyright © 2019-2026 Joelle Maslak
 # All Rights Reserved - See License
 #
 
@@ -79,6 +79,14 @@ class Appointment {
 
         my $duration = $.end - $.start;
         return $long < $duration < $fake-long-meeting;
+    }
+
+    method is-short-meeting(UInt:D :$short = 60*2 -->Bool) {
+
+        # We don't want to show the LED for the fake meeting used by
+        # spammers.
+        my $duration = $.end - $.start
+        return $duration < $short;
     }
 
     method Str(-->Str) { return "$.start $.end $.description" }
@@ -232,7 +240,7 @@ class Main-Thread {
 
         my $next = @filtered.grep(*.future-meeting).first;
 
-        my @current = @filtered.grep(*.in-meeting).grep(! *.is-long-meeting);
+        my @current = @filtered.grep(*.in-meeting).grep(! *.is-long-meeting).grep(! *.is-short-meeting);
 
         if $off {
             @!ignores   = @current;
@@ -349,7 +357,7 @@ class Main-Thread {
 
     method light-red()   { self.light-command(20,  0, 0, 255, 0, 0) }
     method light-green() { self.light-command( 0, 20, 0, 0, 255, 0) }
-    method light-off()   { self.light-command( 0,  0, 0, 50, 0, 50) }
+    method light-off()   { self.light-command( 0,  0, 0, 250, 0, 250) }
 
     method light-command($r, $g, $b, $extr, $extg, $extb) {
         state $last = '';
@@ -369,7 +377,7 @@ class Main-Thread {
                 }
             }
             $!luxafor.indicate($r, $g, $b);
-            run $!externalrgb, $extr, $extg, $extb if $!externalrgb.defined;
+            my $ignore = run $!externalrgb, $extr, $extg, $extb if $!externalrgb.defined;
         }
 
         return;
@@ -427,7 +435,7 @@ class Main-Thread {
             @filtered = @filtered.grep(! *.is-ooo)<>;
         }
 
-        my @current = @filtered.grep(*.in-meeting).grep(! *.is-long-meeting);
+        my @current = @filtered.grep(*.in-meeting).grep(! *.is-long-meeting).grep(! *.is-short-meeting);
         @current = @current.grep(*.Str ∉  @!ignores».Str);
 
         my $color;
