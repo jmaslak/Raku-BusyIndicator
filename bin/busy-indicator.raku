@@ -85,7 +85,7 @@ class Appointment {
 
         # We don't want to show the LED for the fake meeting used by
         # spammers.
-        my $duration = $.end - $.start
+        my $duration = $.end - $.start;
         return $duration < $short;
     }
 

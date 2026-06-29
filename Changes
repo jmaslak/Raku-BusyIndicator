@@ -1,6 +1,7 @@
 Revision history for Raku-BusyIndicator
 
 {{$NEXT}}
+    - [bugfix] Fix compile/run bug
 
 0.6.0  2026-06-29T15:17:21-06:00
     - [feature] Don't display meetings < 120 seconds (used by spammers).
