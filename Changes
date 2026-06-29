@@ -1,6 +1,8 @@
 Revision history for Raku-BusyIndicator
 
 {{$NEXT}}
+
+0.6.2  2026-06-29T15:27:51-06:00
     - [feature] Ignore long and short meetings in all displays
 
 0.6.1  2026-06-29T15:19:00-06:00

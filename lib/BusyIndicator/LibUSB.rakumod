@@ -5,7 +5,7 @@ use NativeCall;
 
 constant MAX-BUFFER-SIZE = 256;
 
-unit class BusyIndicator::LibUSB:ver<0.6.1>:auth<zef:jmaslak>;
+unit class BusyIndicator::LibUSB:ver<0.6.2>:auth<zef:jmaslak>;
 
 has libusb_context $!ctx .= new;
 has libusb_device_handle $!handle;
