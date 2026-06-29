@@ -238,7 +238,7 @@ class Main-Thread {
             @filtered = @filtered.grep(! *.is-ooo)<>;
         }
 
-        my $next = @filtered.grep(*.future-meeting).first;
+        my $next = @filtered.grep(*.future-meeting).grep(! *.is-long-meeting).grep(! *.is-short-meeting).first;
 
         my @current = @filtered.grep(*.in-meeting).grep(! *.is-long-meeting).grep(! *.is-short-meeting);
 
@@ -294,7 +294,7 @@ class Main-Thread {
     }
 
     method display-future-meetings(--> Nil) {
-        my @future = @!appointments.grep(*.future-meeting)<>;
+        my @future = @!appointments.grep(*.future-meeting).grep(! *.is-long-meeting).grep(! *.is-short-meeting)<>;
         if $!ignore-ooo {
             @future = @future.grep(! *.is-ooo)<>;
         }
