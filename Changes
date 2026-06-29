@@ -1,6 +1,8 @@
 Revision history for Raku-BusyIndicator
 
 {{$NEXT}}
+
+0.6.1  2026-06-29T15:19:00-06:00
     - [bugfix] Fix compile/run bug
 
 0.6.0  2026-06-29T15:17:21-06:00
