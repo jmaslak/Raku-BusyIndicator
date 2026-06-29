@@ -2,7 +2,7 @@ Revision history for Raku-BusyIndicator
 
 {{$NEXT}}
 
-0.6.0  2026-06-29T15:14:55-06:00
+0.6.0  2026-06-29T15:17:21-06:00
     - [feature] Don't display meetings < 120 seconds (used by spammers).
 
 0.5.0  2023-06-02T20:08:14-06:00
