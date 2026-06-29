@@ -1,11 +1,11 @@
 use v6.d;
 
 #
-# Copyright © 2020-2021 Joelle Maslak
+# Copyright © 2020-2026 Joelle Maslak
 # All Rights Reserved - See License
 #
 
-unit class BusyIndicator::Luxafor:ver<0.5.0>:auth<zef:jmaslak>;
+unit class BusyIndicator::Luxafor:ver<0.6.0>:auth<zef:jmaslak>;
 
 use LibUSB;
 use LibUSB::Raw;

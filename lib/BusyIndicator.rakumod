@@ -1,11 +1,11 @@
 use v6;
 
 #
-# Copyright © 2021-2023 Joelle Maslak
+# Copyright © 2021-2026 Joelle Maslak
 # All Rights Reserved - See License
 #
 
-unit class BusyIndicator:ver<0.5.0>:auth<zef:jmaslak>;
+unit class BusyIndicator:ver<0.6.0>:auth<zef:jmaslak>;
 
 # Right now, there is no functionality here.
 
@@ -17,7 +17,7 @@ BusyIndicator - Luxafor Indicators based on Google Calendar and Webcam Status
 
 =head1 COPYRIGHT
 
-Copyright © 2019-2023 Joelle Maslak
+Copyright © 2019-2026 Joelle Maslak
 This application is free software; you can distribute it and/or modify it under the Artistic License 2.0
 
 Also included is a modified version of Travis Gibson's C<LibUSB> which has a

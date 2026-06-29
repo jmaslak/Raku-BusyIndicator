@@ -5,7 +5,7 @@ use NativeCall;
 
 constant MAX-BUFFER-SIZE = 256;
 
-unit class BusyIndicator::LibUSB:ver<0.5.0>:auth<zef:jmaslak>;
+unit class BusyIndicator::LibUSB:ver<0.6.0>:auth<zef:jmaslak>;
 
 has libusb_context $!ctx .= new;
 has libusb_device_handle $!handle;
@@ -305,6 +305,8 @@ How long to wait before timing out. Defaults to 0 (never time out).
 Travis Gibson <TGib.Travis@protonmail.com>
 
 =head1 COPYRIGHT AND LICENSE
+
+No Copyright 2026 Joelle Maslak (added to satisfy commit)
 
 Copyright 2020 Travis Gibson
 
