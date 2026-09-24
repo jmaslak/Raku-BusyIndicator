@@ -52,7 +52,7 @@ multi method get-device(Int $target-vid, Int $target-pid) {
 }
 
 multi method get-device(&check:($desc)) {
-  my int64 $listptr .= new;
+  my int64 $listptr;
   my $size = libusb_get_device_list($!ctx, $listptr);
   my $array = nativecast(CArray[libusb_device], Pointer[libusb_device].new($listptr));
 
